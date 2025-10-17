@@ -9,6 +9,9 @@ public class PlayerTank : MonoBehaviour
     [SerializeField] private float speed = 0.05f;
     [SerializeField] private float rotationSpeed = 80f;
     [SerializeField] public InputAction moveAction;
+    public int maxBullets = 5;
+    public int maxMines = 2;
+    
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
