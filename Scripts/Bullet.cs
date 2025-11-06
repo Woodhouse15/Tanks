@@ -1,4 +1,5 @@
 using UnityEngine;
+using Vector3 = UnityEngine.Vector3;
 
 public class Bullet : MonoBehaviour
 {
@@ -7,10 +8,13 @@ public class Bullet : MonoBehaviour
     {
         
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+    
+    void OnCollisionEnter(Collision other) {
+        if (!other.gameObject.name.Equals("Wall")) {
+            Destroy(other.gameObject);
+        }
+        else {
+            transform.position = Vector3.Reflect(transform.position, other.contacts[0].normal);
+        }
     }
 }
