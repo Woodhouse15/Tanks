@@ -1,20 +1,33 @@
 using UnityEngine;
 using Vector3 = UnityEngine.Vector3;
 
-public class Bullet : MonoBehaviour
-{
+
+public class Bullet : MonoBehaviour {
+    Rigidbody rb;
+    public bool players = false;
+
+    int reflects = 0;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
+    void Start() {
+        rb = GetComponent<Rigidbody>();
     }
-    
-    void OnCollisionEnter(Collision other) {
-        if (!other.gameObject.name.Equals("Wall")) {
+
+    void OnTriggerEnter(Collider other) {
+        Debug.Log(other.gameObject.tag);
+        
+        if (other.gameObject.CompareTag("Player") && !players) {
             Destroy(other.gameObject);
         }
-        else {
-            transform.position = Vector3.Reflect(transform.position, other.contacts[0].normal);
+        if (other.gameObject.CompareTag("Player") && players && reflects > 0) {
+            Debug.Log("Destroy player - own bullet");
+            Destroy(other.gameObject);
         }
+
+        if ((!other.gameObject.CompareTag("Wall") || reflects != 0) &&
+            (!other.gameObject.CompareTag("Breakable") || reflects != 0)) return;
+        Debug.Log("Hit Wall");
+        reflects++;
+        rb.linearVelocity = Vector3.Reflect(rb.linearVelocity, transform.forward);
     }
 }

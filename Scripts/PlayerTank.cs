@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -8,16 +9,15 @@ public class PlayerTank : MonoBehaviour
 {
     
     [SerializeField] private float speed = 0.05f;
-    [SerializeField] private float bulletSpeed = 1f;
+    private float bulletSpeed = 10f;
     [SerializeField] private float rotationSpeed = 80f;
     [SerializeField] public InputAction moveAction;
     [SerializeField] public GameObject bulletPrefab;
     [SerializeField] public GameObject minePrefab;
     public int maxBullets = 5;
     public int maxMines = 2;
-    public int currentMines = 0;
-    public int currBullets = 0;
-    
+    public int currentMines;
+    GameObject[] bullets;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -31,11 +31,14 @@ public class PlayerTank : MonoBehaviour
         if (Mouse.current.leftButton.wasPressedThisFrame) {
             Shoot();
         }
+        if (Mouse.current.rightButton.wasPressedThisFrame) {
+            LayMine();
+        }
     }
 
     private void FixedUpdate() {
         MovePlayer();
-
+        
         
     }
 
@@ -46,20 +49,37 @@ public class PlayerTank : MonoBehaviour
     }
 
     void Shoot() {
-        var mouseX = Mouse.current.position.x.ReadValue();
-        var mouseY = Mouse.current.position.y.ReadValue();
-        if (currBullets >= maxBullets) return;
-        currBullets++;
-        var newObject = Instantiate(bulletPrefab, transform.position, bulletPrefab.transform.rotation);
+        Plane plane = new Plane(Vector3.up, transform.position);
+        Vector3 mousePos = Mouse.current.position.ReadValue();
+        Ray ray = Camera.main.ScreenPointToRay(mousePos);
+        bullets = GameObject.FindGameObjectsWithTag("Bullet");
+        if (bullets.Length >= maxBullets) return;
+        float distance;
+        if (plane.Raycast(ray, out distance)) {
+            Vector3 target = ray.GetPoint(distance);
+            Vector3 rawDirection = target - transform.position;
+            Vector3 horizontal = new Vector3(rawDirection.x, 0, rawDirection.z);
+            Vector3 direction = horizontal.normalized;
+            Vector3 start = new Vector3(transform.position.x, 0.2f, transform.position.z);
+            var newObject = Instantiate(bulletPrefab, start, Quaternion.LookRotation(direction));
+            newObject.GetComponent<Bullet>().players = true;
+            newObject.transform.Rotate(90,0,0);
+            newObject.GetComponent<Rigidbody>().linearVelocity = direction * bulletSpeed;
+            //Debug stuff - ignore
+            if (false) {
+                LineRenderer lineRenderer = new GameObject("Line").AddComponent<LineRenderer>();
+                lineRenderer.endColor = Color.red;
+                lineRenderer.startColor = Color.red;
+                lineRenderer.positionCount = 2;
+                lineRenderer.SetPosition(0, transform.position);
+                lineRenderer.SetPosition(1, transform.position + direction * distance);
+            }
+        }
     }
 
     void MovePlayer() {
         Vector2 directions = moveAction.ReadValue<Vector2>();
-        if (directions == Vector2.left || directions == Vector2.right) {
-            transform.Rotate(0f, directions.x * rotationSpeed * Time.deltaTime, 0f);
-        }
-        else {
-            transform.Translate(0f,0f,directions.y * speed * Time.deltaTime);
-        }
+        transform.Rotate(0f, directions.x * rotationSpeed * Time.deltaTime, 0f);
+        transform.Translate(0f,0f,directions.y * speed * Time.deltaTime);
     }
 }
