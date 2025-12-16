@@ -3,31 +3,38 @@ using Vector3 = UnityEngine.Vector3;
 
 
 public class Bullet : MonoBehaviour {
-    Rigidbody rb;
-    public bool players = false;
+    private Rigidbody _rb;
+    public bool players;
 
-    int reflects = 0;
+    int reflects;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() {
-        rb = GetComponent<Rigidbody>();
+        _rb = GetComponent<Rigidbody>();
     }
 
-    void OnTriggerEnter(Collider other) {
-        Debug.Log(other.gameObject.tag);
-        
+    void OnCollisionEnter(Collision other) {
         if (other.gameObject.CompareTag("Player") && !players) {
             Destroy(other.gameObject);
         }
         if (other.gameObject.CompareTag("Player") && players && reflects > 0) {
-            Debug.Log("Destroy player - own bullet");
             Destroy(other.gameObject);
         }
-
-        if ((!other.gameObject.CompareTag("Wall") || reflects != 0) &&
-            (!other.gameObject.CompareTag("Breakable") || reflects != 0)) return;
-        Debug.Log("Hit Wall");
-        reflects++;
-        rb.linearVelocity = Vector3.Reflect(rb.linearVelocity, transform.forward);
+        if (other.gameObject.CompareTag("Wall") || other.gameObject.CompareTag("Breakable")) {
+            if (reflects == 0) {
+                reflects++;
+                ContactPoint contact = other.contacts[0];
+                Vector3 newVelocity = Vector3.Reflect(-other.relativeVelocity, contact.normal);
+                _rb.AddForce(newVelocity);
+                Quaternion target = Quaternion.LookRotation(newVelocity);
+                Quaternion offset = Quaternion.Euler(90,0,0);
+                transform.rotation = target * offset;
+                _rb.angularVelocity = Vector3.zero;
+            }
+            else {
+                Destroy(gameObject);
+            }
+            
+        }
     }
 }

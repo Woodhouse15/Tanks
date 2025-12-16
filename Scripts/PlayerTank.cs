@@ -60,7 +60,9 @@ public class PlayerTank : MonoBehaviour
             Vector3 rawDirection = target - transform.position;
             Vector3 horizontal = new Vector3(rawDirection.x, 0, rawDirection.z);
             Vector3 direction = horizontal.normalized;
-            Vector3 start = new Vector3(transform.position.x, 0.2f, transform.position.z);
+            Vector3 xz = new Vector3(direction.x, 0, direction.z).normalized;
+            Vector3 offset = transform.position + (xz * 1.5f);
+            Vector3 start = new Vector3(offset.x, 0.2f, offset.z);
             var newObject = Instantiate(bulletPrefab, start, Quaternion.LookRotation(direction));
             newObject.GetComponent<Bullet>().players = true;
             newObject.transform.Rotate(90,0,0);
